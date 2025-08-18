@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; white-space: pre-wrap; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>تست API وب‌کدینو</h1>
+    
+    <div class="test-section">
+        <h3>تست لاگین</h3>
+        <button onclick="testLogin()">تست لاگین</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>تست ثبت‌نام</h3>
+        <button onclick="testRegister()">تست ثبت‌نام</button>
+        <div id="register-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>تست تماس</h3>
+        <button onclick="testContact()">تست فرم تماس</button>
+        <div id="contact-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api';
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.textContent = 'در حال تست...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        identifier: 'test@test.com',
+                        password: '123456'
+                    })
+                });
+
+                const data = await response.json();
+                resultDiv.textContent = `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testRegister() {
+            const resultDiv = document.getElementById('register-result');
+            resultDiv.textContent = 'در حال تست...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'کاربر تست',
+                        email: 'test@test.com',
+                        phone: '09123456789',
+                        password: '123456'
+                    })
+                });
+
+                const data = await response.json();
+                resultDiv.textContent = `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testContact() {
+            const resultDiv = document.getElementById('contact-result');
+            resultDiv.textContent = 'در حال تست...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/contacts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'کاربر تست',
+                        email: 'test@test.com',
+                        phone: '09123456789',
+                        subject: 'تست',
+                        description: 'این یک پیام تست است'
+                    })
+                });
+
+                const data = await response.json();
+                resultDiv.textContent = `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

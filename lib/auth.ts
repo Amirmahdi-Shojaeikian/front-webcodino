@@ -74,7 +74,7 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
-    credentials: 'include',
+    // credentials: 'include', // ممکن است باعث مشکل CORS شود
     ...options,
   };
 

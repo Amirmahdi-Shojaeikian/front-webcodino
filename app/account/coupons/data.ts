@@ -3,7 +3,7 @@ export type Coupon = {
   title: string;
   amount: string; // درصد یا مبلغ
   expireAt: string;
-  status: "فعال" | "منقضی";
+  status: "فعال" | "منقضی" | "استفاده شده";
 };
 
 export const coupons: Coupon[] = [

@@ -1,4 +1,13 @@
 // مدیریت توکن و احراز هویت
+type UserSource = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+};
+
 export interface LoginData {
   identifier: string;
   password: string;
@@ -93,25 +102,25 @@ export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => 
       password: loginData.password
     }),
   });
-  const token = (raw as any)?.token || (raw as any)?.accessToken || (raw as any)?.updateUser?.accessToken;
+  const token = (raw as { token?: string; accessToken?: string; updateUser?: { accessToken?: string } })?.token || (raw as { token?: string; accessToken?: string; updateUser?: { accessToken?: string } })?.accessToken || (raw as { token?: string; accessToken?: string; updateUser?: { accessToken?: string } })?.updateUser?.accessToken;
   if (token) {
     setToken(token, loginData.remember);
   }
-  const userSource = (raw as any)?.user || (raw as any)?.updateUser || (raw as any)?.data;
-  const user = userSource
+  const userSource = (raw as { user?: unknown; updateUser?: unknown; data?: unknown })?.user || (raw as { user?: unknown; updateUser?: unknown; data?: unknown })?.updateUser || (raw as { user?: unknown; updateUser?: unknown; data?: unknown })?.data;
+  const user = userSource && typeof userSource === 'object' && userSource !== null
     ? {
-        id: userSource._id || userSource.id,
-        name: userSource.name,
-        email: userSource.email,
-        phone: userSource.phone,
-        role: userSource.role,
+        id: (userSource as UserSource)._id || (userSource as UserSource).id || '',
+        name: (userSource as UserSource).name || '',
+        email: (userSource as UserSource).email || '',
+        phone: (userSource as UserSource).phone,
+        role: (userSource as UserSource).role || '',
       }
     : undefined;
   return {
     success: !!user,
     user,
     token,
-    message: (raw as any)?.message,
+    message: (raw as { message?: string })?.message,
   };
 };
 
@@ -126,14 +135,14 @@ export const registerUser = async (registerData: RegisterData): Promise<AuthResp
       password: registerData.password
     }),
   });
-  const userSource = raw as any;
+  const userSource = raw as UserSource;
   const user = userSource && userSource._id
     ? {
-        id: userSource._id || userSource.id,
-        name: userSource.name,
-        email: userSource.email,
+        id: userSource._id || userSource.id || '',
+        name: userSource.name || '',
+        email: userSource.email || '',
         phone: userSource.phone,
-        role: userSource.role,
+        role: userSource.role || '',
       }
     : undefined;
   return {
@@ -154,14 +163,14 @@ export const forgotPassword = async (email: string): Promise<{ success: boolean;
 // دریافت اطلاعات کاربر
 export const getCurrentUser = async (): Promise<AuthResponse> => {
   const raw = await apiRequest('/auth/me');
-  const userSource = (raw as any)?.data || (raw as any)?.user || raw;
-  const user = userSource
+  const userSource = (raw as { data?: unknown; user?: unknown })?.data || (raw as { data?: unknown; user?: unknown })?.user || raw;
+  const user = userSource && typeof userSource === 'object' && userSource !== null
     ? {
-        id: userSource._id || userSource.id,
-        name: userSource.name,
-        email: userSource.email,
-        phone: userSource.phone,
-        role: userSource.role,
+        id: (userSource as UserSource)._id || (userSource as UserSource).id || '',
+        name: (userSource as UserSource).name || '',
+        email: (userSource as UserSource).email || '',
+        phone: (userSource as UserSource).phone,
+        role: (userSource as UserSource).role || '',
       }
     : undefined;
   return {
@@ -204,8 +213,8 @@ export const fetchTickets = async (): Promise<{ tickets: TicketListItem[] }> => 
   if (Array.isArray(raw)) {
     return { tickets: raw as TicketListItem[] };
   }
-  if ((raw as any)?.tickets && Array.isArray((raw as any).tickets)) {
-    return { tickets: (raw as any).tickets as TicketListItem[] };
+  if ((raw as { tickets?: unknown })?.tickets && Array.isArray((raw as { tickets?: unknown }).tickets)) {
+    return { tickets: (raw as { tickets: TicketListItem[] }).tickets };
   }
   return { tickets: [] };
 };
@@ -234,8 +243,8 @@ export const fetchTicketsAdmin = async (): Promise<{ tickets: TicketListItem[] }
   if (Array.isArray(raw)) {
     return { tickets: raw as TicketListItem[] };
   }
-  if ((raw as any)?.tickets && Array.isArray((raw as any).tickets)) {
-    return { tickets: (raw as any).tickets as TicketListItem[] };
+  if ((raw as { tickets?: unknown })?.tickets && Array.isArray((raw as { tickets?: unknown }).tickets)) {
+    return { tickets: (raw as { tickets: TicketListItem[] }).tickets };
   }
   return { tickets: [] };
 };

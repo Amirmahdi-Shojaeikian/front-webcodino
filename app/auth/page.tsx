@@ -68,8 +68,9 @@ export default function AuthPage() {
       } else {
         setLoginGeneralError(result.message || "ورود ناموفق بود. لطفاً اطلاعات خود را بررسی کنید.");
       }
-    } catch (error: any) {
-      setLoginGeneralError(error.message || "خطا در ارتباط با سرور.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "خطا در ارتباط با سرور.";
+      setLoginGeneralError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +102,9 @@ export default function AuthPage() {
       } else {
         setRegisterGeneralError(result.message || "ثبت‌نام ناموفق بود. لطفاً اطلاعات خود را بررسی کنید.");
       }
-    } catch (error: any) {
-      setRegisterGeneralError(error.message || "خطا در ارتباط با سرور.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "خطا در ارتباط با سرور.";
+      setRegisterGeneralError(errorMessage);
     } finally {
       setIsLoading(false);
     }

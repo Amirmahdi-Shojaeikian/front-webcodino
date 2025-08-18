@@ -9,7 +9,7 @@ type CouponForm = {
   title: string;
   amount: string; // درصد یا مبلغ ثابت
   expireAt: string; // تاریخ شمسی
-  status: "فعال" | "منقضی";
+  status: "فعال" | "منقضی" | "استفاده شده";
   // وابستگی به محصول/دسته اختیاری
   productId?: number; // در صورت نیاز به اعمال روی محصول خاص
   category?: string; // یا اعمال روی دسته

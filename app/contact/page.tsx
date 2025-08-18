@@ -45,8 +45,9 @@ export default function ContactPage() {
         // حذف پیام موفقیت بعد از 5 ثانیه
         setTimeout(() => setSuccessMsg(""), 5000);
       }
-    } catch (err: any) {
-      setErrorMsg(err?.message || "خطا در ارسال پیام تماس");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "خطا در ارسال پیام تماس";
+      setErrorMsg(errorMessage);
       // حذف پیام خطا بعد از 5 ثانیه
       setTimeout(() => setErrorMsg(""), 5000);
     } finally {

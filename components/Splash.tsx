@@ -42,7 +42,7 @@ export default function Splash({ onFinish }: SplashProps) {
       clearTimeout(fadeTimer);
       clearTimeout(endTimer);
     };
-  }, [pathname]);
+  }, [pathname, onFinish]);
 
   if (!isVisible) return null;
 

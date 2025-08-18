@@ -9,6 +9,7 @@ import { logoutUser } from "@/lib/auth";
 
 interface UserMenuProps {
   userName?: string;
+  balance?: number;
 }
 
 export default function UserMenu({ userName = "کاربر" }: UserMenuProps) {

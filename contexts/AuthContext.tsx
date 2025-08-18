@@ -64,7 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (userData: AuthResponse['user']) => {
     setUser(userData);
     // نمایش پیام خوش‌آمدگویی
-    showToast(`خوش آمدید ${userData.name}! 🎉`, 'success', 4000);
+    if (userData?.name) {
+      showToast(`خوش آمدید ${userData.name}! 🎉`, 'success', 4000);
+    }
   };
 
   const logout = () => {

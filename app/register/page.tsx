@@ -52,8 +52,9 @@ export default function RegisterPage() {
         // حذف پیام خطا بعد از 5 ثانیه
         setTimeout(() => setGeneralError(null), 5000);
       }
-    } catch (error: any) {
-      setGeneralError(error.message || "خطا در ارتباط با سرور.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "خطا در ارتباط با سرور.";
+      setGeneralError(errorMessage);
       // حذف پیام خطا بعد از 5 ثانیه
       setTimeout(() => setGeneralError(null), 5000);
     } finally {

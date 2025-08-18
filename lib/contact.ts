@@ -72,7 +72,7 @@ export const fetchContactsAdmin = async (params?: { page?: number; limit?: numbe
   if (params?.limit) qs.set('limit', String(params.limit));
   if (params?.status) qs.set('status', params.status);
   const query = qs.toString() ? `?${qs.toString()}` : '';
-  return await adminRequest(`/contacts${query}`) as { success: boolean; data: ContactItem[]; pagination?: any };
+  return await adminRequest(`/contacts${query}`) as { success: boolean; data: ContactItem[]; pagination?: { page: number; limit: number; total: number; totalPages: number } };
 };
 
 export const fetchContactByIdAdmin = async (id: string) => {

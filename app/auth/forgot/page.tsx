@@ -35,8 +35,9 @@ export default function ForgotPasswordPage() {
         setMessage(result.message || "خطایی رخ داد.");
         setMessageType('error');
       }
-    } catch (error: any) {
-      setMessage(error.message || "خطا در ارتباط با سرور.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "خطا در ارتباط با سرور.";
+      setMessage(errorMessage);
       setMessageType('error');
     } finally {
       setIsLoading(false);

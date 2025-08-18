@@ -49,7 +49,7 @@ export default function CouponsPage() {
           <div className="text-sm text-foreground/70">استفاده شده</div>
         </div>
         <div className="bg-background border rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">{rows.filter(c => c.status === "منقضی شده").length}</div>
+          <div className="text-2xl font-bold text-blue-600">{rows.filter(c => c.status === "منقضی").length}</div>
           <div className="text-sm text-foreground/70">منقضی شده</div>
         </div>
       </div>

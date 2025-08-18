@@ -50,12 +50,13 @@ export default function LoginPage() {
         // حذف پیام خطا بعد از 5 ثانیه
         setTimeout(() => setGeneralError(null), 5000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "خطا در ارتباط با سرور.";
       // بررسی خطای کاربر ثبت‌نام نکرده
-      if (error.message && error.message.includes('یافت نشد') || error.message.includes('not found') || error.message.includes('ثبت‌نام')) {
+      if (errorMessage && errorMessage.includes('یافت نشد') || errorMessage.includes('not found') || errorMessage.includes('ثبت‌نام')) {
         setGeneralError("کاربری با این اطلاعات یافت نشد. لطفاً ابتدا ثبت‌نام کنید.");
       } else {
-        setGeneralError(error.message || "خطا در ارتباط با سرور.");
+        setGeneralError(errorMessage);
         // حذف پیام خطا بعد از 5 ثانیه
         setTimeout(() => setGeneralError(null), 5000);
       }

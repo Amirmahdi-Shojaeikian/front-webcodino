@@ -3,7 +3,7 @@ export type OrderRow = {
   date: string;
   items: string;
   amount: string;
-  status: "پرداخت شده" | "در حال پردازش" | "مرجوع";
+  status: "پرداخت شده" | "در حال پردازش" | "مرجوع" | "فعال" | "تکمیل شده" | "در انتظار";
 };
 
 export const orders: OrderRow[] = [

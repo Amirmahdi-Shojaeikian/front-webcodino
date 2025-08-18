@@ -70,7 +70,7 @@ export default function AdminProductsPage() {
     e.preventDefault();
     const required: Array<keyof Product> = ["title", "category", "subcategory", "price"];
     for (const k of required) {
-      const v = (form as any)[k];
+      const v = (form as Record<string, unknown>)[k];
       if (!v || String(v).trim() === "") {
         if (typeof window !== "undefined") alert("لطفاً فیلدهای الزامی را تکمیل کنید.");
         return;
@@ -232,7 +232,7 @@ export default function AdminProductsPage() {
                 const reader = new FileReader();
                 reader.onload = () => {
                   const dataUrl = String(reader.result || "");
-                  handleChange("image", dataUrl as any);
+                  handleChange("image", dataUrl);
                 };
                 reader.readAsDataURL(file);
               }}

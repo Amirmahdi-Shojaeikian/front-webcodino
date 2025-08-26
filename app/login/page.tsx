@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   const [loginData, setLoginData] = useState({
     identifier: "",
@@ -26,6 +27,7 @@ export default function LoginPage() {
     e.preventDefault();
     setErrors([]);
     setGeneralError(null);
+    setSuccessMessage(null);
 
     // اعتبارسنجی فرم
     const validationErrors = validateLoginForm(loginData);
@@ -38,13 +40,26 @@ export default function LoginPage() {
     try {
       const result = await loginUser(loginData);
       
+      console.log('Login result:', result); // Debug log
+      
       if (result.success && result.user) {
         login(result.user);
-        if (result.user.role === "admin") {
-          router.push("/admin");
-        } else {
-          router.push("/account");
-        }
+        
+        // نمایش پیغام موفقیت
+        setSuccessMessage("ورود با موفقیت انجام شد!");
+        
+        console.log('User role:', result.user.role); // Debug log
+        
+        // انتظار کوتاه برای نمایش پیغام موفقیت
+        setTimeout(() => {
+          if (result.user!.role === "admin") {
+            console.log('Redirecting to /admin');
+            router.push("/admin");
+          } else {
+            console.log('Redirecting to /account');
+            router.push("/account");
+          }
+        }, 1500);
       } else {
         setGeneralError(result.message || "ورود ناموفق بود. لطفاً اطلاعات خود را بررسی کنید.");
         // حذف پیام خطا بعد از 5 ثانیه
@@ -83,6 +98,15 @@ export default function LoginPage() {
                 message={generalError}
                 onClose={() => setGeneralError(null)}
                 autoDismiss={true}
+              />
+            )}
+            
+            {successMessage && (
+              <Notification
+                type="success"
+                message={successMessage}
+                onClose={() => setSuccessMessage(null)}
+                autoDismiss={false}
               />
             )}
             

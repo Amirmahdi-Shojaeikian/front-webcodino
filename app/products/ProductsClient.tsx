@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import NoScroll from "@/components/NoScroll";
 import Link from "next/link";
 import type { Product } from "./data";
+import { generateSlug } from "./slugMapping";
 
+// Persian to English mapping for URL-friendly names
 const categoryToSubcategories: Record<string, string[]> = {
   "سایت": ["سایت شرکتی", "فروشگاهی", "پزشکی", "وبلاگی", "رزومه‌ای"],
   "اپلیکیشن": ["اپلیکیشن فروشگاهی", "اپلیکیشن خدماتی", "اپلیکیشن پزشکی", "اپلیکیشن شرکتی"],
@@ -17,6 +19,32 @@ const categoryToSubcategories: Record<string, string[]> = {
     "پکیج‌های خدمات جانبی"
   ],
 };
+
+// URL-friendly mapping
+const subcategoryToUrlMap: Record<string, string> = {
+  "سایت شرکتی": "company-site",
+  "فروشگاهی": "shop",
+  "پزشکی": "medical",
+  "وبلاگی": "blog",
+  "رزومه‌ای": "cv",
+  "اپلیکیشن فروشگاهی": "shop-app",
+  "اپلیکیشن خدماتی": "service-app",
+  "اپلیکیشن پزشکی": "medical-app",
+  "اپلیکیشن شرکتی": "company-app",
+  "ربات تلگرام": "telegram-bot",
+  "ربات اینستاگرام": "instagram-bot",
+  "ربات بله": "bale-bot",
+  "لیست خدمات شرکت تولید محتوا (سوشیال مدیا + عکاسی)": "content-services",
+  "پکیج‌های مدیریت و تولید محتوا": "content-management",
+  "پکیج‌های عکاسی و ادیت": "photo-editing",
+  "پکیج‌های ویدیو و ریلز": "video-reels",
+  "پکیج‌های خدمات جانبی": "additional-services"
+};
+
+// Reverse mapping for URL to Persian
+const urlToSubcategoryMap: Record<string, string> = Object.fromEntries(
+  Object.entries(subcategoryToUrlMap).map(([key, value]) => [value, key])
+);
 
 const disabledCategories = ["هاست", "سرور"];
 
@@ -35,7 +63,14 @@ const categoryColors: Record<string, string> = {
   "ربات بله": "🟨",
 };
 
-export default function ProductsClient({ items }: { items: Product[] }) {
+interface ProductsClientProps {
+  items: Product[];
+  activeFilters: string[];
+  onFilterChange: (filters: string[]) => void;
+  onResetFilters: () => void;
+}
+
+export default function ProductsClient({ items, activeFilters, onFilterChange, onResetFilters }: ProductsClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 768);
@@ -53,6 +88,34 @@ export default function ProductsClient({ items }: { items: Product[] }) {
 
   const [products] = useState<Product[]>(items);
 
+  // Sync activeFilters with selected state
+  useEffect(() => {
+    try {
+      // Use setTimeout to avoid React render timing issues
+      setTimeout(() => {
+        const newSelected: Record<string, Set<string>> = {};
+        Object.keys(categoryToSubcategories).forEach((c) => (newSelected[c] = new Set()));
+        
+        // Parse activeFilters (URL-friendly) to determine which subcategories should be selected
+        activeFilters.forEach(urlFilter => {
+          const persianSubcategory = urlToSubcategoryMap[urlFilter];
+          if (persianSubcategory) {
+            // Find the category for this subcategory
+            Object.entries(categoryToSubcategories).forEach(([category, subcategories]) => {
+              if (subcategories.includes(persianSubcategory)) {
+                newSelected[category].add(persianSubcategory);
+              }
+            });
+          }
+        });
+        
+        setSelected(newSelected);
+      }, 0);
+    } catch (error) {
+      console.error('Error syncing filters:', error);
+    }
+  }, [activeFilters]);
+
   const selectedSubSet = useMemo(() => {
     const set = new Set<string>();
     Object.values(selected).forEach((s) => s.forEach((x) => set.add(x)));
@@ -69,14 +132,33 @@ export default function ProductsClient({ items }: { items: Product[] }) {
   }
 
   function toggleSubcategory(category: string, sub: string) {
-    setSelected((prev) => {
-      const copy: Record<string, Set<string>> = { ...prev };
-      const set = new Set(copy[category]);
-      if (set.has(sub)) set.delete(sub);
-      else set.add(sub);
-      copy[category] = set;
-      return copy;
-    });
+    try {
+      setSelected((prev) => {
+        const copy: Record<string, Set<string>> = { ...prev };
+        const set = new Set(copy[category]);
+        if (set.has(sub)) set.delete(sub);
+        else set.add(sub);
+        copy[category] = set;
+        
+        // Convert selected state to URL-friendly filter array immediately
+        const newFilters: string[] = [];
+        Object.values(copy).forEach((s) => {
+          s.forEach((x) => {
+            const urlFriendly = subcategoryToUrlMap[x] || x;
+            newFilters.push(urlFriendly);
+          });
+        });
+        
+        // Update URL filters using setTimeout to avoid React render issues
+        setTimeout(() => {
+          onFilterChange(newFilters);
+        }, 0);
+        
+        return copy;
+      });
+    } catch (error) {
+      console.error('Error toggling subcategory:', error);
+    }
   }
 
   return (
@@ -85,7 +167,17 @@ export default function ProductsClient({ items }: { items: Product[] }) {
       <div className="grid grid-cols-1 md:grid-cols-[18%_82%] gap-6">
         <aside className="border rounded-2xl p-5 order-1 md:order-none md:h-[70vh] md:overflow-y-auto [direction:rtl] bg-background/20 backdrop-blur-sm">
           <div className="[direction:rtl]">
-            <h2 className="text-xl font-bold mb-4">فیلتر محصولات</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">فیلتر محصولات</h2>
+              {activeFilters.length > 0 && (
+                <button
+                  onClick={onResetFilters}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  پاک کردن فیلترها
+                </button>
+              )}
+            </div>
             <div className="flex flex-col">
               {Object.entries(categoryToSubcategories).map(([category, subs]) => {
                 const isOpen = !!openCategories[category];
@@ -164,7 +256,7 @@ export default function ProductsClient({ items }: { items: Product[] }) {
                     {p.desc.split(' ').slice(0, 5).join(' ')}...
                   </div>
                   <div className="mt-auto pt-4 flex items-center justify-end">
-                    <Link href={`/products/${p.id}`} className="rounded-xl border px-3 py-2 text-base hover:bg-blue-600 hover:text-white">
+                    <Link href={`/products/${generateSlug(p.title)}`} className="rounded-xl border px-3 py-2 text-base hover:bg-blue-600 hover:text-white">
                       توضیحات
                     </Link>
                   </div>

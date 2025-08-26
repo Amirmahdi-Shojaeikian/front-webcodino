@@ -23,6 +23,7 @@ export default function robots(): MetadataRoute.Robots {
           "/auth",
           "/auth/*",
           "/api/*",
+          // فیلترهای محصولات را disallow نمی‌کنیم چون برای SEO مفید هستند
         ],
       },
     ],

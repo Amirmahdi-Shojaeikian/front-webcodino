@@ -27,11 +27,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const aboutDetailPaths = aboutItems.map((i) => `/about/${i.slug}`);
   const faqDetailPaths = faqs.map((f) => `/faq/${f.slug}`);
 
+  // مسیرهای فیلتر محصولات (URL-friendly)
+  const productFilterPaths = [
+    "/products/company-site",
+    "/products/shop", 
+    "/products/medical",
+    "/products/blog",
+    "/products/cv",
+    "/products/shop-app",
+    "/products/service-app", 
+    "/products/medical-app",
+    "/products/company-app",
+    "/products/telegram-bot",
+    "/products/instagram-bot",
+    "/products/bale-bot",
+    "/products/content-services",
+    "/products/content-management",
+    "/products/photo-editing",
+    "/products/video-reels",
+    "/products/additional-services",
+  ];
+
   const allPaths = [
     ...staticPaths,
     ...productDetailPaths,
     ...aboutDetailPaths,
     ...faqDetailPaths,
+    ...productFilterPaths,
   ];
 
   const uniquePaths = Array.from(new Set(allPaths));
@@ -40,7 +62,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${BASE_URL}${path}`,
     lastModified: now,
     changeFrequency: "weekly",
-    priority: path === "/" ? 1 : 0.7,
+    priority: path === "/" ? 1 : path.startsWith("/products") ? 0.8 : 0.7,
   }));
 }
 

@@ -1,20 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
 import { use } from "react";
-import { allProducts, findProductById } from "../data";
+import { allProducts } from "../data";
+import { findProductBySlug, getAllProductSlugs } from "../slugMapping";
 import ProductTabs from "../ProductTabs";
 import RelatedProducts from "../RelatedProducts";
+
 export const dynamic = "force-static";
 export const revalidate = false;
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return allProducts.map((p) => ({ id: String(p.id) }));
+  return getAllProductSlugs();
 }
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const product = findProductById(Number(id));
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const product = findProductBySlug(slug);
+  
   if (!product) {
     return (
       <section className="py-10">
@@ -23,6 +26,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </section>
     );
   }
+
   return (
     <section className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 border rounded-2xl p-6 bg-background">

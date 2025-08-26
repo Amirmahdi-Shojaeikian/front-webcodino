@@ -38,6 +38,10 @@ export interface AuthResponse {
 
 // ذخیره توکن در localStorage
 export const setToken = (token: string, remember: boolean = false) => {
+  // Clear existing tokens first
+  localStorage.removeItem('auth_token');
+  sessionStorage.removeItem('auth_token');
+  
   if (remember) {
     localStorage.setItem('auth_token', token);
   } else {
@@ -74,82 +78,146 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
-    // credentials: 'include', // ممکن است باعث مشکل CORS شود
+    mode: 'cors', // Enable CORS
+    credentials: 'omit', // Don't send cookies to avoid CORS issues
     ...options,
   };
 
   try {
+    console.log(`Making API request to: ${API_BASE_URL}${endpoint}`);
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    
+    // Handle different response types
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+    }
     
     if (!response.ok) {
-      throw new Error(data.message || 'خطا در ارتباط با سرور');
+      const errorMessage = data?.message || data || `HTTP ${response.status}: ${response.statusText}`;
+      
+      // اگر خطای احراز هویت باشد، توکن را پاک کن
+      if (response.status === 401 || response.status === 403) {
+        if (typeof window !== 'undefined') {
+          removeToken();
+          // اگر در browser هستیم و error authentication است، redirect کن
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+            window.location.href = '/login';
+          }
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
     
     return data;
   } catch (error) {
     console.error('API Error:', error);
-    throw error;
+    
+    // Handle specific error types
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('خطا در ارتباط با سرور. لطفاً اتصال اینترنت خود را بررسی کنید.');
+    }
+    
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    throw new Error('خطای ناشناخته در ارتباط با سرور');
   }
 };
 
 // لاگین
 export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => {
-  const raw = await apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({
-      identifier: loginData.identifier,
-      password: loginData.password
-    }),
-  });
-  const token = (raw as { token?: string; accessToken?: string; updateUser?: { accessToken?: string } })?.token || (raw as { token?: string; accessToken?: string; updateUser?: { accessToken?: string } })?.accessToken || (raw as { token?: string; accessToken?: string; updateUser?: { accessToken?: string } })?.updateUser?.accessToken;
-  if (token) {
-    setToken(token, loginData.remember);
+  try {
+    const raw = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        identifier: loginData.identifier,
+        password: loginData.password
+      }),
+    });
+
+    // Extract token from various possible response formats
+    const token = (raw as any)?.token || 
+                  (raw as any)?.accessToken || 
+                  (raw as any)?.updateUser?.accessToken ||
+                  (raw as any)?.data?.token ||
+                  (raw as any)?.user?.token;
+
+    if (token) {
+      setToken(token, loginData.remember);
+    }
+
+    // Extract user data from various possible response formats
+    const userSource = (raw as any)?.user || 
+                       (raw as any)?.updateUser ||
+                       (raw as any)?.data?.user || 
+                       (raw as any)?.data;
+
+    const user = userSource && typeof userSource === 'object' && userSource !== null
+      ? {
+          id: userSource._id || userSource.id || '',
+          name: userSource.name || '',
+          email: userSource.email || '',
+          phone: userSource.phone,
+          role: userSource.role || 'user',
+        }
+      : undefined;
+
+    return {
+      success: !!user && !!token,
+      user,
+      token,
+      message: (raw as any)?.message || 'ورود موفقیت‌آمیز بود',
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
   }
-  const userSource = (raw as { user?: unknown; updateUser?: unknown; data?: unknown })?.user || (raw as { user?: unknown; updateUser?: unknown; data?: unknown })?.updateUser || (raw as { user?: unknown; updateUser?: unknown; data?: unknown })?.data;
-  const user = userSource && typeof userSource === 'object' && userSource !== null
-    ? {
-        id: (userSource as UserSource)._id || (userSource as UserSource).id || '',
-        name: (userSource as UserSource).name || '',
-        email: (userSource as UserSource).email || '',
-        phone: (userSource as UserSource).phone,
-        role: (userSource as UserSource).role || '',
-      }
-    : undefined;
-  return {
-    success: !!user,
-    user,
-    token,
-    message: (raw as { message?: string })?.message,
-  };
 };
 
 // ثبت‌نام
 export const registerUser = async (registerData: RegisterData): Promise<AuthResponse> => {
-  const raw = await apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({
-      name: registerData.name,
-      email: registerData.email,
-      phone: registerData.phone,
-      password: registerData.password
-    }),
-  });
-  const userSource = raw as UserSource;
-  const user = userSource && userSource._id
-    ? {
-        id: userSource._id || userSource.id || '',
-        name: userSource.name || '',
-        email: userSource.email || '',
-        phone: userSource.phone,
-        role: userSource.role || '',
-      }
-    : undefined;
-  return {
-    success: true,
-    user,
-    message: 'ثبت‌نام با موفقیت انجام شد',
-  };
+  try {
+    const raw = await apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: registerData.name,
+        email: registerData.email,
+        phone: registerData.phone,
+        password: registerData.password
+      }),
+    });
+
+    // Extract user data from various possible response formats
+    const userSource = (raw as any)?.user || 
+                       (raw as any)?.data?.user || 
+                       (raw as any)?.data;
+
+    const user = userSource && typeof userSource === 'object' && userSource !== null
+      ? {
+          id: userSource._id || userSource.id || '',
+          name: userSource.name || '',
+          email: userSource.email || '',
+          phone: userSource.phone,
+          role: userSource.role || 'user',
+        }
+      : undefined;
+
+    return {
+      success: true,
+      user,
+      message: (raw as any)?.message || 'ثبت‌نام با موفقیت انجام شد',
+    };
+  } catch (error) {
+    console.error('Register error:', error);
+    throw error;
+  }
 };
 
 // فراموشی رمز عبور
@@ -237,9 +305,25 @@ export const replyTicket = async (payload: { ticketId: string; message: string; 
   });
 };
 
-// Admin tickets
+// Update ticket
+export const updateTicket = async (ticketId: string, payload: { status?: string; priority?: string; department?: string }) => {
+  return await apiRequest(`/tickets/${ticketId}/update`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+};
+
+// Update message
+export const updateMessage = async (messageId: string, payload: { message: string }) => {
+  return await apiRequest(`/messages/${messageId}/update`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+};
+
+// Admin tickets - استفاده از endpoint مخصوص ادمین
 export const fetchTicketsAdmin = async (): Promise<{ tickets: TicketListItem[] }> => {
-  const raw = await apiRequest('/tickets/admin');
+  const raw = await apiRequest('/tickets/support');
   if (Array.isArray(raw)) {
     return { tickets: raw as TicketListItem[] };
   }
@@ -250,7 +334,21 @@ export const fetchTicketsAdmin = async (): Promise<{ tickets: TicketListItem[] }
 };
 
 export const fetchTicketDetailAdmin = async (id: string): Promise<{ ticket: TicketListItem; messages: TicketMessageItem[] }> => {
-  return await apiRequest(`/tickets/admin/${id}`);
+  const response = await apiRequest(`/tickets/${id}`);
+  
+  // Handle different response formats
+  let ticket = response.ticket || response.data?.ticket || response;
+  let messages = response.messages || response.data?.messages || [];
+  
+  // If response is direct ticket object, find messages in it
+  if (!messages && ticket?.messages) {
+    messages = ticket.messages;
+  }
+  
+  return {
+    ticket: ticket,
+    messages: Array.isArray(messages) ? messages : []
+  };
 };
 
 // تغییر رمز عبور
@@ -262,4 +360,34 @@ export const changePassword = async (currentPassword: string, newPassword: strin
       newPassword
     }),
   });
+};
+
+// Users API for admin
+export type UserItem = {
+  _id: string;
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Get all users (admin)
+export const fetchUsersAdmin = async (): Promise<{ users: UserItem[] }> => {
+  const raw = await apiRequest('/users');
+  if (Array.isArray(raw)) {
+    return { users: raw as UserItem[] };
+  }
+  if ((raw as { users?: unknown })?.users && Array.isArray((raw as { users?: unknown }).users)) {
+    return { users: (raw as { users: UserItem[] }).users };
+  }
+  return { users: [] };
+};
+
+// Get user by ID (admin)
+export const fetchUserById = async (userId: string): Promise<{ user: UserItem }> => {
+  return await apiRequest(`/users/${userId}`);
 };

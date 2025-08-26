@@ -66,7 +66,7 @@ export default function ContactPage() {
             <div className="w-full space-y-2 text-base sm:text-lg">
               <div>
                 <div className="text-foreground/70">تلفن:</div>
-                <a href="tel:02112345678" className="text-blue-600 hover:underline">021-12345678</a>
+                <a href="tel:09030882522" className="text-blue-600 hover:underline">09030882522</a>
               </div>
               <div>
                 <div className="text-foreground/70">ایمیل:</div>

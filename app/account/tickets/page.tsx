@@ -2,9 +2,11 @@
 
 import { useState, FormEvent, useEffect } from "react";
 import { fetchTickets, fetchTicketDetail, createTicket, replyTicket, TicketListItem, TicketMessageItem } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import Notification from "@/components/Notification";
 
 export default function TicketsPage() {
+  const { user } = useAuth();
   const [selected, setSelected] = useState<TicketListItem | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [rows, setRows] = useState<TicketListItem[]>([]);
@@ -23,6 +25,7 @@ export default function TicketsPage() {
     sender: 'user' | 'admin';
     timestamp: string;
     fileName?: string;
+    senderId?: string | null;
   }>>([]);
 
   useEffect(() => {
@@ -41,18 +44,59 @@ export default function TicketsPage() {
     };
   }, []);
 
+  // Helper function to determine message sender
+  function mapMessageSender(message: TicketMessageItem, ticket: any): 'user' | 'admin' {
+    // در API واقعی، sender فقط ID است، نه object
+    const senderId = typeof message.sender === 'string' ? message.sender : (message.sender as any)?._id;
+    const currentUserId = user?.id; // از auth context که _id را به id map کرده
+    const ticketCreatorId = typeof ticket?.createdBy === 'string' ? ticket.createdBy : ticket?.createdBy?._id;
+    
+    console.log('=== USER SIDE - Message Sender Detection ===');
+    console.log('Message sender ID:', senderId);
+    console.log('Current user ID:', currentUserId);
+    console.log('Ticket creator ID:', ticketCreatorId);
+    
+    // اگر فرستنده پیام همان کاربر جاری است (کاربر عادی)
+    if (currentUserId && senderId === currentUserId) {
+      console.log('→ Determined as USER (current user)');
+      return 'user';
+    }
+    
+    // اگر فرستنده پیام سازنده تیکت است و همان کاربر جاری نیست
+    if (ticketCreatorId && senderId === ticketCreatorId && senderId !== currentUserId) {
+      console.log('→ Determined as USER (ticket creator)');
+      return 'user';
+    }
+    
+    // اگر فرستنده کسی غیر از کاربر جاری است، احتمالا ادمین یا پشتیبان است
+    if (currentUserId && senderId !== currentUserId) {
+      console.log('→ Determined as ADMIN (support staff)');
+      return 'admin';
+    }
+    
+    console.log('→ Default to ADMIN');
+    return 'admin';
+  }
+
   async function openTicketDetail(ticket: TicketListItem) {
     setSelected(ticket);
     try {
       const detail = await fetchTicketDetail(ticket._id);
+      
+      // Map messages with proper sender detection based on user ID
       const mappedMsgs = detail.messages.map((m: TicketMessageItem) => ({
         id: m._id,
         text: m.message,
-        sender: (m.sender?.role === 'admin' ? 'admin' : 'user') as 'user' | 'admin',
-        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR')
+        sender: mapMessageSender(m, detail.ticket || ticket),
+        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
+        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as any)?._id
       }));
+      
+      console.log('USER SIDE - Mapped messages with senders:', mappedMsgs);
       setChatMessages(mappedMsgs);
-    } catch {}
+    } catch (error) {
+      console.error('Error fetching ticket detail:', error);
+    }
   }
 
   type AdminMessage = {
@@ -134,13 +178,17 @@ export default function TicketsPage() {
     setIsSending(true);
     try {
       await replyTicket({ ticketId: selected._id, message: newMessage });
+      
+      // Refresh ticket detail with proper sender detection
       const detail = await fetchTicketDetail(selected._id);
       const mappedMsgs = detail.messages.map((m: TicketMessageItem) => ({
         id: m._id,
         text: m.message,
-        sender: (m.sender?.role === 'admin' ? 'admin' : 'user') as 'user' | 'admin',
-        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR')
+        sender: mapMessageSender(m, detail.ticket || selected),
+        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
+        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as any)?._id
       }));
+      
       setChatMessages(mappedMsgs);
       setNewMessage("");
       setSelectedFile(null);
@@ -323,8 +371,8 @@ export default function TicketsPage() {
                   <div className="max-w-[75%]">
                     <div className={`p-3 rounded-2xl shadow-sm ${
                       message.sender === 'user' 
-                        ? 'bg-blue-500 text-white rounded-bl-md' 
-                        : 'bg-white dark:bg-gray-800 border rounded-br-md'
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-white dark:bg-gray-800 border'
                     }`}>
                       <div className="flex items-center gap-2 mb-1">
                         {message.sender === 'user' ? (
@@ -369,7 +417,7 @@ export default function TicketsPage() {
               {isSending && (
                 <div className="flex justify-start">
                   <div className="max-w-[75%]">
-                    <div className="bg-blue-500 text-white rounded-2xl rounded-bl-md p-3 shadow-sm">
+                    <div className="bg-blue-500 text-white rounded-2xl p-3 shadow-sm">
                       <div className="flex items-center gap-2">
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-white/70 rounded-full animate-bounce"></div>

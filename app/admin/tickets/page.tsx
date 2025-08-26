@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
-import { fetchTicketsAdmin, fetchTicketDetailAdmin, replyTicket, TicketListItem, TicketMessageItem } from "@/lib/auth";
+import { fetchTicketsAdmin, fetchTicketDetailAdmin, replyTicket, updateTicket, TicketListItem, TicketMessageItem } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 type AdminTicket = TicketListItem & { userName?: string };
 const seedTickets: AdminTicket[] = [];
 
 export default function AdminTicketsPage() {
+  const { user } = useAuth();
   const [rows, setRows] = useState<AdminTicket[]>(seedTickets);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,6 +22,9 @@ export default function AdminTicketsPage() {
         setIsLoading(true);
         const data = await fetchTicketsAdmin();
         if (alive) setRows(Array.isArray(data?.tickets) ? data.tickets as AdminTicket[] : []);
+      } catch (error) {
+        console.error('Error fetching admin tickets:', error);
+        if (alive) setRows([]);
       } finally {
         if (alive) setIsLoading(false);
       }
@@ -40,6 +45,7 @@ export default function AdminTicketsPage() {
     sender: 'user' | 'admin';
     timestamp: string;
     fileName?: string;
+    senderId?: string | null;
   }>>([]);
   const [msgForm, setMsgForm] = useState({
     recipientEmail: "",
@@ -76,18 +82,63 @@ export default function AdminTicketsPage() {
     setFileName("");
   }
 
+  // Helper function to determine message sender
+  function mapMessageSender(message: TicketMessageItem, ticket: any): 'user' | 'admin' {
+    // در API واقعی، sender فقط ID است، نه object
+    const senderId = typeof message.sender === 'string' ? message.sender : (message.sender as any)?._id;
+    const currentUserId = user?.id; // از auth context که _id را به id map کرده
+    const ticketCreatorId = typeof ticket?.createdBy === 'string' ? ticket.createdBy : ticket?.createdBy?._id;
+    
+    console.log('=== Message Sender Detection ===');
+    console.log('Message sender ID:', senderId);
+    console.log('Current user ID:', currentUserId);
+    console.log('Ticket creator ID:', ticketCreatorId);
+    console.log('Ticket:', ticket);
+    
+    // اگر فرستنده پیام همان کاربر جاری است (ادمین فعلی)
+    if (currentUserId && senderId === currentUserId) {
+      console.log('→ Determined as ADMIN (current user)');
+      return 'admin';
+    }
+    
+    // اگر فرستنده پیام سازنده تیکت است (کاربر عادی که تیکت را ایجاد کرده)
+    if (ticketCreatorId && senderId === ticketCreatorId) {
+      console.log('→ Determined as USER (ticket creator)');
+      return 'user';
+    }
+    
+    // اگر فرستنده کسی غیر از سازنده تیکت است، احتمالا ادمین یا پشتیبان است
+    if (ticketCreatorId && senderId !== ticketCreatorId && senderId !== currentUserId) {
+      console.log('→ Determined as ADMIN (other staff member)');
+      return 'admin';
+    }
+    
+    console.log('→ Default to USER');
+    return 'user';
+  }
+
   async function openChat(ticket: AdminTicket) {
     setSelectedTicket(ticket);
     try {
       const detail = await fetchTicketDetailAdmin(ticket._id);
-      const mappedMsgs = detail.messages.map((m: TicketMessageItem) => ({
+      const messages = detail.messages || [];
+      
+      // Map messages with proper sender detection based on user ID
+      const mappedMsgs = messages.map((m: TicketMessageItem) => ({
         id: m._id,
         text: m.message,
-        sender: (m.sender?.role === 'admin' ? 'admin' : 'user') as 'user' | 'admin',
-        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR')
+        sender: mapMessageSender(m, detail.ticket),
+        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
+        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as any)?._id
       }));
+      
+      console.log('Current user ID:', user?.id);
+      console.log('Mapped messages with senders:', mappedMsgs);
       setChatMessages(mappedMsgs);
-    } catch {}
+    } catch (error) {
+      console.error('Error fetching ticket detail:', error);
+      setChatMessages([]);
+    }
   }
 
   async function sendReply(e: React.FormEvent<HTMLFormElement>) {
@@ -96,14 +147,24 @@ export default function AdminTicketsPage() {
     
     setIsSending(true);
     try {
-      await replyTicket({ ticketId: selectedTicket._id, message: newMessage });
+      await replyTicket({ 
+        ticketId: selectedTicket._id, 
+        message: newMessage,
+        attachment: selectedFile ? fileName : null
+      });
+      
+      // Refresh ticket detail with proper sender detection
       const detail = await fetchTicketDetailAdmin(selectedTicket._id);
-      const mappedMsgs = detail.messages.map((m: TicketMessageItem) => ({
+      const messages = detail.messages || [];
+      
+      const mappedMsgs = messages.map((m: TicketMessageItem) => ({
         id: m._id,
         text: m.message,
-        sender: (m.sender?.role === 'admin' ? 'admin' : 'user') as 'user' | 'admin',
-        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR')
+        sender: mapMessageSender(m, detail.ticket),
+        timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
+        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as any)?._id
       }));
+      
       setChatMessages(mappedMsgs);
       setNewMessage("");
       setSelectedFile(null);
@@ -336,50 +397,60 @@ export default function AdminTicketsPage() {
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
-              {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-blue-50/30 to-gray-50 dark:from-gray-900 dark:to-gray-800">
               {chatMessages.map((message) => (
-                <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
-                  <div className="max-w-[75%]">
-                    <div className={`p-3 rounded-2xl shadow-sm ${
+                <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex items-start gap-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
                       message.sender === 'user' 
-                        ? 'bg-blue-500 text-white rounded-bl-md' 
-                        : 'bg-white dark:bg-gray-800 border rounded-br-md'
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' 
+                        : 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                     }`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        {message.sender === 'user' ? (
-                          <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                      {message.sender === 'user' ? (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      {/* Message info */}
+                      <div className={`flex items-center gap-2 mb-1 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                          {message.sender === 'user' ? (selectedTicket?.createdBy?.name || 'کاربر') : 'پشتیبانی وب‌کدینو'}
+                        </span>
+                        <span className="text-xs text-gray-500">{message.timestamp}</span>
+                      </div>
+
+                      {/* Message bubble */}
+                      <div className={`px-4 py-3 rounded-2xl shadow-sm ${
+                        message.sender === 'user' 
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' 
+                          : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600'
+                      }`}>
+
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </p>
+
+                        {message.fileName && (
+                          <div className={`mt-3 flex items-center gap-2 p-2 rounded-lg ${
+                            message.sender === 'user' 
+                              ? 'bg-white/20' 
+                              : 'bg-gray-100 dark:bg-gray-600'
+                          }`}>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                             </svg>
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                            </svg>
+                            <span className="text-xs">{message.fileName}</span>
                           </div>
                         )}
-                        <span className="text-xs opacity-90">
-                          {message.sender === 'user' ? (selectedTicket.createdBy?.name || 'کاربر') : 'پشتیبانی وب‌کدینو'}
-                        </span>
-                        <span className="text-xs opacity-70">{message.timestamp}</span>
                       </div>
-                      <p className={`text-sm leading-5 whitespace-pre-wrap ${
-                        message.sender === 'user' 
-                          ? 'text-white' 
-                          : 'text-gray-800 dark:text-gray-200'
-                      }`}>
-                        {message.text}
-                      </p>
-                      {message.fileName && (
-                        <div className="mt-2 flex items-center gap-2 p-2 bg-white/10 dark:bg-gray-700/50 rounded-lg">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                          </svg>
-                          <span className="text-xs truncate">{message.fileName}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -389,7 +460,7 @@ export default function AdminTicketsPage() {
               {isSending && (
                 <div className="flex justify-end">
                   <div className="max-w-[75%]">
-                    <div className="bg-white dark:bg-gray-800 border rounded-2xl rounded-br-md p-3 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 border rounded-2xl p-3 shadow-sm">
                       <div className="flex items-center gap-2">
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -400,6 +471,18 @@ export default function AdminTicketsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {chatMessages.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-medium mb-2">شروع گفتگو</p>
+                  <p className="text-sm">هنوز پیامی در این تیکت ثبت نشده است</p>
                 </div>
               )}
             </div>

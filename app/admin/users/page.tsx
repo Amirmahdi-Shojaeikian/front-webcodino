@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import type { AdminUserRow } from "@/app/api/admin/users/route";
+import { fetchUsersAdmin, UserItem } from "@/lib/auth";
 
 export default function AdminUsersPage() {
-  const [userRows, setUserRows] = useState<AdminUserRow[]>([]);
+  const [userRows, setUserRows] = useState<UserItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("همه");
@@ -14,9 +14,11 @@ export default function AdminUsersPage() {
     (async () => {
       try {
         setIsLoading(true);
-        const res = await fetch("/api/admin/users", { cache: "no-store" });
-        const data = await res.json();
-        if (alive) setUserRows(Array.isArray(data?.items) ? data.items : []);
+        const data = await fetchUsersAdmin();
+        if (alive) setUserRows(Array.isArray(data?.users) ? data.users : []);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        if (alive) setUserRows([]);
       } finally {
         if (alive) setIsLoading(false);
       }
@@ -24,9 +26,9 @@ export default function AdminUsersPage() {
     return () => { alive = false; };
   }, []);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<AdminUserRow | null>(null);
+  const [draft, setDraft] = useState<UserItem | null>(null);
 
-  function startEdit(row: AdminUserRow) {
+  function startEdit(row: UserItem) {
     setEditingId(row.id);
     setDraft({ ...row });
   }

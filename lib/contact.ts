@@ -86,6 +86,21 @@ export const updateContactStatusAdmin = async (id: string, status: 'new' | 'answ
   }) as { success: boolean; message: string; data: ContactItem };
 };
 
+// Delete contact
+export const deleteContact = async (contactId: string) => {
+  return await adminRequest(`/contacts/${contactId}`, {
+    method: 'DELETE',
+  }) as { success: boolean; message: string };
+};
+
+// Get contact stats
+export const getContactStats = async () => {
+  return await adminRequest('/contacts/stats') as { 
+    success: boolean; 
+    data: { new: number; answered: number; total: number } 
+  };
+};
+
 export const deleteContactAdmin = async (id: string) => {
   return await adminRequest(`/contacts/${id}`, { method: 'DELETE' }) as { success: boolean; message: string };
 };

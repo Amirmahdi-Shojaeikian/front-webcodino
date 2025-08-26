@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
-import { fetchTicketsAdmin, fetchTicketDetailAdmin, replyTicket, updateTicket, TicketListItem, TicketMessageItem } from "@/lib/auth";
+import { fetchTicketsAdmin, fetchTicketDetailAdmin, replyTicket, TicketListItem, TicketMessageItem } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
 
 type AdminTicket = TicketListItem & { userName?: string };
@@ -83,9 +83,9 @@ export default function AdminTicketsPage() {
   }
 
   // Helper function to determine message sender
-  function mapMessageSender(message: TicketMessageItem, ticket: any): 'user' | 'admin' {
+  function mapMessageSender(message: TicketMessageItem, ticket: TicketListItem): 'user' | 'admin' {
     // در API واقعی، sender فقط ID است، نه object
-    const senderId = typeof message.sender === 'string' ? message.sender : (message.sender as any)?._id;
+    const senderId = typeof message.sender === 'string' ? message.sender : (message.sender as Record<string, unknown>)?._id as string;
     const currentUserId = user?.id; // از auth context که _id را به id map کرده
     const ticketCreatorId = typeof ticket?.createdBy === 'string' ? ticket.createdBy : ticket?.createdBy?._id;
     
@@ -129,7 +129,7 @@ export default function AdminTicketsPage() {
         text: m.message,
         sender: mapMessageSender(m, detail.ticket),
         timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
-        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as any)?._id
+        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as Record<string, unknown>)?._id as string
       }));
       
       console.log('Current user ID:', user?.id);
@@ -162,7 +162,7 @@ export default function AdminTicketsPage() {
         text: m.message,
         sender: mapMessageSender(m, detail.ticket),
         timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
-        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as any)?._id
+        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as Record<string, unknown>)?._id as string
       }));
       
       setChatMessages(mappedMsgs);

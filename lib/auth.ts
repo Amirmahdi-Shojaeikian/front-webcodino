@@ -143,21 +143,23 @@ export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => 
     });
 
     // Extract token from various possible response formats
-    const token = (raw as any)?.token || 
-                  (raw as any)?.accessToken || 
-                  (raw as any)?.updateUser?.accessToken ||
-                  (raw as any)?.data?.token ||
-                  (raw as any)?.user?.token;
+    const rawDataForToken = raw as Record<string, unknown>;
+    const token = rawDataForToken?.token as string || 
+                  rawDataForToken?.accessToken as string || 
+                  (rawDataForToken?.updateUser as Record<string, unknown>)?.accessToken as string ||
+                  (rawDataForToken?.data as Record<string, unknown>)?.token as string ||
+                  (rawDataForToken?.user as Record<string, unknown>)?.token as string;
 
     if (token) {
       setToken(token, loginData.remember);
     }
 
     // Extract user data from various possible response formats
-    const userSource = (raw as any)?.user || 
-                       (raw as any)?.updateUser ||
-                       (raw as any)?.data?.user || 
-                       (raw as any)?.data;
+    const rawDataForLoginUser = raw as Record<string, unknown>;
+    const userSource = rawDataForLoginUser?.user as UserSource || 
+                       rawDataForLoginUser?.updateUser as UserSource ||
+                       (rawDataForLoginUser?.data as Record<string, unknown>)?.user as UserSource || 
+                       rawDataForLoginUser?.data as UserSource;
 
     const user = userSource && typeof userSource === 'object' && userSource !== null
       ? {
@@ -173,7 +175,7 @@ export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => 
       success: !!user && !!token,
       user,
       token,
-      message: (raw as any)?.message || 'ورود موفقیت‌آمیز بود',
+      message: (raw as Record<string, unknown>)?.message as string || 'ورود موفقیت‌آمیز بود',
     };
   } catch (error) {
     console.error('Login error:', error);
@@ -195,9 +197,10 @@ export const registerUser = async (registerData: RegisterData): Promise<AuthResp
     });
 
     // Extract user data from various possible response formats
-    const userSource = (raw as any)?.user || 
-                       (raw as any)?.data?.user || 
-                       (raw as any)?.data;
+    const rawDataForUser = raw as Record<string, unknown>;
+    const userSource = rawDataForUser?.user as UserSource || 
+                       (rawDataForUser?.data as Record<string, unknown>)?.user as UserSource || 
+                       rawDataForUser?.data as UserSource;
 
     const user = userSource && typeof userSource === 'object' && userSource !== null
       ? {
@@ -212,7 +215,7 @@ export const registerUser = async (registerData: RegisterData): Promise<AuthResp
     return {
       success: true,
       user,
-      message: (raw as any)?.message || 'ثبت‌نام با موفقیت انجام شد',
+      message: (raw as Record<string, unknown>)?.message as string || 'ثبت‌نام با موفقیت انجام شد',
     };
   } catch (error) {
     console.error('Register error:', error);
@@ -337,16 +340,17 @@ export const fetchTicketDetailAdmin = async (id: string): Promise<{ ticket: Tick
   const response = await apiRequest(`/tickets/${id}`);
   
   // Handle different response formats
-  let ticket = response.ticket || response.data?.ticket || response;
-  let messages = response.messages || response.data?.messages || [];
+  const responseData = response as Record<string, unknown>;
+  let ticket = responseData.ticket || (responseData.data as Record<string, unknown>)?.ticket || responseData;
+  let messages = responseData.messages || (responseData.data as Record<string, unknown>)?.messages || [];
   
   // If response is direct ticket object, find messages in it
-  if (!messages && ticket?.messages) {
-    messages = ticket.messages;
+  if (!messages && (ticket as Record<string, unknown>)?.messages) {
+    messages = (ticket as Record<string, unknown>).messages as TicketMessageItem[];
   }
   
   return {
-    ticket: ticket,
+    ticket: ticket as TicketListItem,
     messages: Array.isArray(messages) ? messages : []
   };
 };

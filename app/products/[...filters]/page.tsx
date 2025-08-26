@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ProductsFilteredPage({ params }: { params: { filters: string[] } }) {
+export default function ProductsFilteredPage({ params: _ }: { params: { filters: string[] } }) {
   const router = useRouter();
 
   useEffect(() => {

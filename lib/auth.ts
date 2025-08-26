@@ -341,13 +341,9 @@ export const fetchTicketDetailAdmin = async (id: string): Promise<{ ticket: Tick
   
   // Handle different response formats
   const responseData = response as Record<string, unknown>;
-  let ticket = responseData.ticket || (responseData.data as Record<string, unknown>)?.ticket || responseData;
-  let messages = responseData.messages || (responseData.data as Record<string, unknown>)?.messages || [];
-  
-  // If response is direct ticket object, find messages in it
-  if (!messages && (ticket as Record<string, unknown>)?.messages) {
-    messages = (ticket as Record<string, unknown>).messages as TicketMessageItem[];
-  }
+  const ticket = responseData.ticket || (responseData.data as Record<string, unknown>)?.ticket || responseData;
+  const messages = responseData.messages || (responseData.data as Record<string, unknown>)?.messages || 
+                   (ticket as Record<string, unknown>)?.messages || [];
   
   return {
     ticket: ticket as TicketListItem,

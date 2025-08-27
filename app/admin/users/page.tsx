@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
                           className="rounded border px-2 py-1 w-full min-w-28 bg-background"
                           value={draft?.role ?? "کاربر"}
                           onChange={(e) =>
-                            setDraft((d) => (d ? { ...d, role: e.target.value as AdminUserRow["role"] } : d))
+                            setDraft((d) => (d ? { ...d, role: e.target.value } : d))
                           }
                         >
                           <option value="ادمین">ادمین</option>

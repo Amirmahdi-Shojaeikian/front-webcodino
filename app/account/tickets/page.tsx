@@ -47,7 +47,7 @@ export default function TicketsPage() {
   // Helper function to determine message sender
   function mapMessageSender(message: TicketMessageItem, ticket: TicketListItem): 'user' | 'admin' {
     // در API واقعی، sender فقط ID است، نه object
-    const senderId = typeof message.sender === 'string' ? message.sender : (message.sender as Record<string, unknown>)?._id as string;
+    const senderId = typeof message.sender === 'string' ? message.sender : message.sender?._id;
     const currentUserId = user?.id; // از auth context که _id را به id map کرده
     const ticketCreatorId = typeof ticket?.createdBy === 'string' ? ticket.createdBy : ticket?.createdBy?._id;
     
@@ -89,7 +89,7 @@ export default function TicketsPage() {
         text: m.message,
         sender: mapMessageSender(m, detail.ticket || ticket),
         timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
-        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as Record<string, unknown>)?._id as string
+        senderId: typeof m.sender === 'string' ? m.sender : m.sender?._id
       }));
       
       console.log('USER SIDE - Mapped messages with senders:', mappedMsgs);
@@ -186,7 +186,7 @@ export default function TicketsPage() {
         text: m.message,
         sender: mapMessageSender(m, detail.ticket || selected),
         timestamp: new Date(m.createdAt).toLocaleDateString('fa-IR'),
-        senderId: typeof m.sender === 'string' ? m.sender : (m.sender as Record<string, unknown>)?._id as string
+        senderId: typeof m.sender === 'string' ? m.sender : m.sender?._id
       }));
       
       setChatMessages(mappedMsgs);

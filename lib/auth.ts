@@ -269,14 +269,14 @@ export type TicketListItem = {
   priority: string;
   department: string;
   createdAt: string;
-  createdBy?: { name: string; email: string; role: string };
+  createdBy?: { _id?: string; name: string; email: string; role: string };
 };
 
 export type TicketMessageItem = {
   _id: string;
   message: string;
   createdAt: string;
-  sender?: { name: string; role: string };
+  sender?: { _id?: string; name: string; role: string };
 };
 
 export const fetchTickets = async (): Promise<{ tickets: TicketListItem[] }> => {

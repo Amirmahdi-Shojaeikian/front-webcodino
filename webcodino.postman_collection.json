@@ -25,7 +25,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/register",
+							"raw": "https://server.webcodino.ir/api/auth/register",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -55,7 +55,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/login",
+							"raw": "https://server.webcodino.ir/api/auth/login",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -86,7 +86,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/me",
+							"raw": "https://server.webcodino.ir/api/auth/me",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -117,7 +117,7 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/logout",
+							"raw": "https://server.webcodino.ir/api/auth/logout",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -157,7 +157,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/change-password",
+							"raw": "https://server.webcodino.ir/api/auth/change-password",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -202,7 +202,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/tickets/add",
+							"raw": "https://server.webcodino.ir/api/tickets/add",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -233,7 +233,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/tickets",
+							"raw": "https://server.webcodino.ir/api/tickets",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -263,7 +263,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/tickets/{{ticketId}}",
+							"raw": "https://server.webcodino.ir/api/tickets/{{ticketId}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -308,7 +308,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/tickets/{{68a0a5fec9bf934b442b7774}}/update",
+							"raw": "https://server.webcodino.ir/api/tickets/{{68a0a5fec9bf934b442b7774}}/update",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -359,7 +359,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/messages/add",
+							"raw": "https://server.webcodino.ir/api/messages/add",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -404,7 +404,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/messages/{{messageId}}/update",
+							"raw": "https://server.webcodino.ir/api/messages/{{messageId}}/update",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -445,7 +445,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/contacts",
+							"raw": "https://server.webcodino.ir/api/contacts",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -475,7 +475,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/contacts?page=1&limit=10&status=new",
+							"raw": "https://server.webcodino.ir/api/contacts?page=1&limit=10&status=new",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -519,7 +519,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/contacts/{{contactId}}",
+							"raw": "https://server.webcodino.ir/api/contacts/{{contactId}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -564,7 +564,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/contacts/{{contactId}}/status",
+							"raw": "https://server.webcodino.ir/api/contacts/{{contactId}}/status",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -596,7 +596,7 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/contacts/{{contactId}}",
+							"raw": "https://server.webcodino.ir/api/contacts/{{contactId}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -627,7 +627,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/contacts/stats",
+							"raw": "https://server.webcodino.ir/api/contacts/stats",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -663,7 +663,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/users",
+							"raw": "https://server.webcodino.ir/api/users",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -693,7 +693,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/users/{{userId}}",
+							"raw": "https://server.webcodino.ir/api/users/{{userId}}",
 							"protocol": "http",
 							"host": [
 								"localhost"

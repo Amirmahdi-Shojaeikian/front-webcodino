@@ -8,7 +8,7 @@
 
 ```env
 # Development
-NEXT_PUBLIC_API_URL=https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api
+NEXT_PUBLIC_API_URL=https://server.webcodino.ir/api
 
 # Production (جایگزین کنید با URL واقعی backend)
 # NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api
@@ -101,15 +101,15 @@ Backend باید response های زیر را برگرداند:
 #### تست Backend:
 ```bash
 # Health check
-curl https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/health
+curl https://server.webcodino.ir/api/health
 
 # Register
-curl -X POST https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/register \
+curl -X POST https://server.webcodino.ir/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"تست","email":"test@example.com","phone":"09123456789","password":"123456"}'
 
 # Login
-curl -X POST https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/login \
+curl -X POST https://server.webcodino.ir/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"identifier":"test@example.com","password":"123456"}'
 ```
@@ -140,7 +140,7 @@ curl -X POST https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/lo
 #### Console Logs:
 Frontend در console درخواست‌های API را log می‌کند:
 ```
-Making API request to: https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api/auth/login
+Making API request to: https://server.webcodino.ir/api/auth/login
 ```
 
 ### 8. Production Deployment

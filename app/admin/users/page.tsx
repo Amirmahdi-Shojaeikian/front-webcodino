@@ -68,13 +68,15 @@ export default function AdminUsersPage() {
 
   function addNewUser() {
     const id = `U-NEW-${Date.now()}`;
-    const newRow: AdminUserRow = {
+    const newRow: UserItem = {
+      _id: id,
       id,
       name: "",
       email: "",
       role: "کاربر",
-      status: "فعال",
-      createdAt: formatPersianDate(new Date()),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     setUserRows((prev) => [newRow, ...prev]);
     startEdit(newRow);
@@ -88,7 +90,7 @@ export default function AdminUsersPage() {
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.id.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === "همه" || user.status === statusFilter;
+      const matchesStatus = statusFilter === "همه" || (statusFilter === "فعال" ? user.isActive : !user.isActive);
       const matchesRole = roleFilter === "همه" || user.role === roleFilter;
       
       return matchesSearch && matchesStatus && matchesRole;
@@ -129,7 +131,6 @@ export default function AdminUsersPage() {
             <option value="همه">همه</option>
             <option value="فعال">فعال</option>
             <option value="غیرفعال">غیرفعال</option>
-            <option value="مسدود">مسدود</option>
           </select>
         </div>
         <div>
@@ -226,20 +227,19 @@ export default function AdminUsersPage() {
                       {isEditing ? (
                         <select
                           className="rounded border px-2 py-1 w-full min-w-28 bg-background"
-                          value={draft?.status ?? "فعال"}
+                          value={draft?.isActive ? "فعال" : "غیرفعال"}
                           onChange={(e) =>
-                            setDraft((d) => (d ? { ...d, status: e.target.value as AdminUserRow["status"] } : d))
+                            setDraft((d) => (d ? { ...d, isActive: e.target.value === "فعال" } : d))
                           }
                         >
                           <option value="فعال">فعال</option>
                           <option value="غیرفعال">غیرفعال</option>
-                          <option value="مسدود">مسدود</option>
                         </select>
                       ) : (
-                        row.status
+                        row.isActive ? "فعال" : "غیرفعال"
                       )}
                     </td>
-                    <td className="p-3 align-top">{row.createdAt}</td>
+                    <td className="p-3 align-top">{formatPersianDate(new Date(row.createdAt))}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         {isEditing ? (

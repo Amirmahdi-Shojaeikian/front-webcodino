@@ -13,7 +13,7 @@ type ContactResponse = {
   errors?: string[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api';
 
 export const submitContact = async (payload: ContactPayload): Promise<ContactResponse> => {
   const response = await fetch(`${API_BASE_URL}/contacts`, {

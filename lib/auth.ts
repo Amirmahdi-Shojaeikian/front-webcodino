@@ -66,7 +66,7 @@ export const isAuthenticated = (): boolean => {
 };
 
 // API calls
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cw4sok48swgwsc4skokoook4.37.27.187.127.sslip.io/api';
 
 // تابع کمکی برای درخواست‌های API
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
